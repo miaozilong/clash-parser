@@ -74,6 +74,14 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
     });
     obj['proxy-groups'][0]['proxies'].unshift(...proxyGroups.map(v => v.name));
 
+    // 确保 rules 节点存在
+    if (!obj.rules) {
+        obj.rules = [];
+    }
+
+    // 在 rules 开头添加 download-cdn.jetbrains.com 的直连规则
+    obj.rules.unshift(`DOMAIN-SUFFIX,download-cdn.jetbrains.com,DIRECT`);
+
     let s = yaml.stringify(obj);
     return s;
 };
