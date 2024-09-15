@@ -80,7 +80,7 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
     }
 
     // 在 rules 开头添加 download-cdn.jetbrains.com 的直连规则
-    obj.rules.unshift(`DOMAIN-SUFFIX,download-cdn.jetbrains.com,DIRECT`);
+    obj.rules.unshift(`DOMAIN,download-cdn.jetbrains.com,DIRECT`);
 
     let s = yaml.stringify(obj);
     return s;
