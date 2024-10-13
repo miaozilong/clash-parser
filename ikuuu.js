@@ -44,6 +44,14 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
             proxies: []
         },
         {
+            name: '负载均衡-所有日本-散列',
+            type: 'load-balance',
+            url: 'http://www.google.com/generate_204',
+            interval: 30,
+            strategy: 'consistent-hashing',
+            proxies: []
+        },
+        {
             name: '负载均衡-香港-轮询',
             type: 'load-balance',
             url: 'http://www.google.com/generate_204',
@@ -59,14 +67,6 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
             strategy: 'consistent-hashing',
             proxies: []
         },
-        {
-            name: '负载均衡-所有日本-散列',
-            type: 'load-balance',
-            url: 'http://www.google.com/generate_204',
-            interval: 30,
-            strategy: 'consistent-hashing',
-            proxies: []
-        }
     ];
 
     obj['proxy-groups'].push(...proxyGroups);
