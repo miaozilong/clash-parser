@@ -58,6 +58,14 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
             interval: 30,
             strategy: 'consistent-hashing',
             proxies: []
+        },
+        {
+            name: '负载均衡-所有日本-散列',
+            type: 'load-balance',
+            url: 'http://www.google.com/generate_204',
+            interval: 30,
+            strategy: 'consistent-hashing',
+            proxies: []
         }
     ];
 
@@ -70,6 +78,8 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
             group.proxies = proxyNames.filter(name => name.includes('香港'));
         } else if (group.name.includes('下载专用')) {
             group.proxies = proxyNames.filter(name => name.includes('x0.01') || name.includes('免费'));
+        } else if (group.name.includes('所有日本')) {
+            group.proxies = proxyNames.filter(name => name.includes('日本'));
         }
     });
     obj['proxy-groups'][0]['proxies'].unshift(...proxyGroups.map(v => v.name));
