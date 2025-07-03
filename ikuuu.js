@@ -88,7 +88,7 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
     if (!obj.rules) {
         obj.rules = [];
     }
-
+    obj.rules.unshift(`DOMAIN,gemini.google.com,负载均衡-所有日本-散列`);
     // 在 rules 开头添加 download-cdn.jetbrains.com 的直连规则
     obj.rules.unshift(`DOMAIN,download-cdn.jetbrains.com,DIRECT`);
 	// 下载matlab的规则
