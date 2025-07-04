@@ -1,17 +1,16 @@
 module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, interval, selected}) => {
     const obj = yaml.parse(raw);
 
-    // 删除obj中proxies节点下的name中带有“免费”的节点
+    // 删除 obj.proxies 中 name 包含“免费”的节点
     if (obj.proxies) {
         obj.proxies = obj.proxies.filter(proxy => !proxy.name.includes("免费"));
     }
 
-    // 请求 https://n544k.no-mad-world.club/link/jKS9t551FdpKroIC?clash=3&extend=1
+    // 请求远程节点
     let kanpian365Url = 'https://n544k.no-mad-world.club/link/jKS9t551FdpKroIC?clash=3&extend=1';
     let additionalData;
     try {
         const response = await axios.get(kanpian365Url);
-        // 解析出数据
         additionalData = yaml.parse(response.data);
         console.log("additionalData", additionalData);
     } catch (error) {
@@ -19,21 +18,20 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
         notify('Error fetching additional data.');
     }
 
-    // 添加到 obj 中 proxies 节点下
-    if (additionalData.proxies) {
-        console.log("additionalData.proxies", additionalData.proxies);
+    // 合并远程代理到本地代理列表
+    if (additionalData && additionalData.proxies) {
         if (!obj.proxies) {
             obj.proxies = [];
         }
         obj.proxies.push(...additionalData.proxies);
     }
 
-    // 新增功能：添加 proxy-groups 节点
+    // 确保 proxy-groups 存在
     if (!obj['proxy-groups']) {
         obj['proxy-groups'] = [];
     }
 
-    // 添加负载均衡配置
+    // 添加负载均衡分组
     const proxyGroups = [
         {
             name: '负载均衡-香港-散列',
@@ -66,36 +64,52 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
             interval: 30,
             strategy: 'consistent-hashing',
             proxies: []
-        },
+        }
     ];
 
     obj['proxy-groups'].push(...proxyGroups);
 
-    // 执行 commands，将 proxy names 分配到各个 proxy-group 中
+    // 收集代理名称
     const proxyNames = obj.proxies ? obj.proxies.map(proxy => proxy.name) : [];
+
+    // 给各个负载均衡组添加匹配代理
     obj['proxy-groups'].forEach(group => {
         if (group.name.includes('香港')) {
             group.proxies = proxyNames.filter(name => name.includes('香港'));
         } else if (group.name.includes('下载专用')) {
-            group.proxies = proxyNames.filter(name => name.includes('x0.01') || name.includes('免费'));
+            group.proxies = proxyNames.filter(name => name.includes('x0.01'));
         } else if (group.name.includes('所有日本')) {
             group.proxies = proxyNames.filter(name => name.includes('日本'));
         }
     });
+
+    // 让第一个组引用所有负载均衡组名（可选）
     obj['proxy-groups'][0]['proxies'].unshift(...proxyGroups.map(v => v.name));
+
+    // 新增普通分组“日本”：包含所有日本代理 + 所有“日本”负载均衡组
+    const japanProxies = proxyNames.filter(name => name.includes('日本'));
+    const japanGroups = obj['proxy-groups']
+        .filter(group => group.name.includes('日本'))
+        .map(group => group.name);
+
+    obj['proxy-groups'].push({
+        name: '日本',
+        type: 'select',
+        proxies: [...japanGroups, ...japanProxies]
+    });
 
     // 确保 rules 节点存在
     if (!obj.rules) {
         obj.rules = [];
     }
-    obj.rules.unshift(`DOMAIN-SUFFIX,cursor.com,🔰 选择节点`);
-    obj.rules.unshift(`DOMAIN-SUFFIX,gemini.google.com,负载均衡-所有日本-散列`);
-    // 在 rules 开头添加 download-cdn.jetbrains.com 的直连规则
-    obj.rules.unshift(`DOMAIN,download-cdn.jetbrains.com,DIRECT`);
-	// 下载matlab的规则
-    obj.rules.unshift(`DOMAIN,esd.mathworks.cn,DIRECT`);
-    obj.rules.unshift(`DOMAIN,esd.mathworks.com,DIRECT`);
 
-    let s = yaml.stringify(obj);
-    return s;
+    // 添加规则，注意顺序
+    obj.rules.unshift(`DOMAIN,esd.mathworks.com,DIRECT`);
+    obj.rules.unshift(`DOMAIN,esd.mathworks.cn,DIRECT`);
+    obj.rules.unshift(`DOMAIN-SUFFIX,gemini.google.com,日本`);
+    obj.rules.unshift(`DOMAIN-SUFFIX,cursor.com,日本`);
+    obj.rules.unshift(`DOMAIN,download-cdn.jetbrains.com,DIRECT`);
+
+    // 转为 YAML 字符串
+    return yaml.stringify(obj);
 };
