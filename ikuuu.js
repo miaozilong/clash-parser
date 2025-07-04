@@ -108,6 +108,7 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
     obj.rules.unshift(`DOMAIN,esd.mathworks.cn,DIRECT`);
     obj.rules.unshift(`DOMAIN-SUFFIX,gemini.google.com,日本`);
     obj.rules.unshift(`DOMAIN-SUFFIX,cursor.com,日本`);
+    obj.rules.unshift(`DOMAIN,cursor.com,日本`);
     obj.rules.unshift(`DOMAIN,download-cdn.jetbrains.com,DIRECT`);
 
     // 转为 YAML 字符串
