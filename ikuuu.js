@@ -75,7 +75,9 @@ module.exports.parse = async (raw, {axios, yaml, notify, console}, {name, url, i
     // 给各个负载均衡组添加匹配代理
     obj['proxy-groups'].forEach(group => {
         if (group.name.includes('香港')) {
-            group.proxies = proxyNames.filter(name => name.includes('香港'));
+            group.proxies = obj.proxies
+                .filter(proxy => proxy.name.includes('香港') && proxy.type === 'ss')
+                .map(proxy => proxy.name);
         } else if (group.name.includes('下载专用')) {
             group.proxies = proxyNames.filter(name => name.includes('x0.01'));
         } else if (group.name.includes('所有日本')) {
